@@ -16,4 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_recipe 'delivery-truck::default'
+changed_cookbooks.each do |cookbook|
+  ignore_rules = node['delivery']['config']['delivery-truck']['lint']['foodcritic']['ignore_rules'] || []
+  if ::File.exist?("#{cookbook.path}/.foodcritic")
+    ignore_rules << ::File.readlines("#{cookbook.path}/.foodcritic").collect { |l| l.gsub(/^~|\n$/, '') }
+  end
+  node.default['delivery']['config']['delivery-truck']['lint']['foodcritic']['ignore_rules'] = ignore_rules
+end
+include_recipe 'delivery-truck::lint'
