@@ -4,7 +4,7 @@ maintainer_email 'ncerny@gmail.com'
 license 'apachev2'
 description 'Installs/Configures _build'
 long_description 'Installs/Configures _build'
-version '0.1.0'
+version '0.1.1'
 
 # The `issues_url` points to the location where issues for this cookbook are
 # tracked.  A `View Issues` link will be displayed on this cookbook's page when
@@ -17,3 +17,6 @@ version '0.1.0'
 # a Supermarket.
 #
 # source_url 'https://github.com/<insert_org_here>/_build' if respond_to?(:source_url)
+
+depends 'delivery-truck'
+depends 'delivery-sugar'
