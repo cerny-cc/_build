@@ -16,4 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+yum_repository 'packages-microsoft-com-prod' do
+  description 'Microsoft Prod'
+  baseurl 'https://packages.microsoft.com/rhel/7/prod/'
+  gpgkey 'https://packages.microsoft.com/keys/microsoft.asc'
+  action :create
+end
+
+package 'powershell'
+
 include_recipe 'delivery-truck::default'
