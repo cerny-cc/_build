@@ -30,7 +30,7 @@ execute 'Generate SSH keys' do
   action :nothing
 end.run_action(:run)
 
-node.default['ssh']['keys']['dbuild'] = ::File.read('/var/opt/delivery/workspace/.ssh/id_rsa.pub')
+node.default['ssh']['keys']['dbuild'] = ::File.read('/var/opt/delivery/workspace/.ssh/id_rsa.pub') if ::File.exist?('/var/opt/delivery/workspace/.ssh/id_rsa.pub')
 
 yum_repository 'packages-microsoft-com-prod' do
   description 'Microsoft Prod'
