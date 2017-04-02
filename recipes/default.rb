@@ -17,6 +17,8 @@
 # limitations under the License.
 # F75ruqePSTN*MqQouNm^Y&mdHsLg2uS8$2SP&K9zNW&Mc*SZ!VN%S@K5HAnE4zT8JI%xsTO6b3cRYw*Zn!zdmSg&gS3n@9gH3
 
+chef_gem 'train'
+
 yum_repository 'packages-microsoft-com-prod' do
   description 'Microsoft Prod'
   baseurl 'https://packages.microsoft.com/rhel/7/prod/'
