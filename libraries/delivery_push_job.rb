@@ -70,8 +70,10 @@ module DeliverySugar
                end
         result = conn.run_command(@command)
         (result.exit_status.eql?(0) ? @results['succeeded'] << node : @results['failed'] << node)
-        @results.stdout << result.stdout
-        @results.stderr << result.stderr
+        puts result.stdout
+        puts result.stderr
+        # @results.stdout << result.stdout
+        # @results.stderr << result.stderr
         conn.close
       end
     end
