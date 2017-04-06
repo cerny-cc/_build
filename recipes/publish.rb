@@ -18,8 +18,6 @@
 
 include_recipe 'delivery-truck::publish'
 
-cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbook-upload')
-
 if upload_cookbook_to_chef_server?
   changed_cookbooks.each do |cookbook|
     if File.exist?(File.join(cookbook.path, 'Berksfile'))
@@ -28,14 +26,10 @@ if upload_cookbook_to_chef_server?
       end
     end
 
-    link ::File.join(cookbook_directory, cookbook.name) do
-      to cookbook.path
-    end
-
     edit_resource(:execute, "upload_cookbook_#{cookbook.name}") do
       command "knife cookbook upload #{cookbook.name} --freeze --force " \
               "--config #{delivery_knife_rb} " \
-              "--cookbook-path #{cookbook_directory}"
+              "--cookbook-path #{cookbook.path}"
     end
   end
 end
