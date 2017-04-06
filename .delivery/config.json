@@ -1,8 +1,8 @@
 {
   "version": "2",
   "build_cookbook": {
-    "name": "build_cookbook",
-    "path": ".delivery/build_cookbook"
+    "name": "_build",
+    "path": "."
   },
   "delivery-truck": {
     "lint": {
