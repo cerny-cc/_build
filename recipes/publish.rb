@@ -16,20 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# We don't want to publish cookbooks from berks.
+file File.join(cookbook.path, 'Berksfile') do
+  action :nothing
+  only_if { File.exist?(File.join(cookbook.path, 'Berksfile')) }
+end.run_action(:delete)
+
 include_recipe 'delivery-truck::publish'
-
-if upload_cookbook_to_chef_server?
-  changed_cookbooks.each do |cookbook|
-    if File.exist?(File.join(cookbook.path, 'Berksfile'))
-      edit_resource(:execute, "berks_vendor_cookbook_#{cookbook.name}") do
-        action :nothing
-      end
-    end
-
-    edit_resource(:execute, "upload_cookbook_#{cookbook.name}") do
-      command "knife cookbook upload #{cookbook.name} --freeze --force " \
-              "--config #{delivery_knife_rb} " \
-              "--cookbook-path #{cookbook.path}"
-    end
-  end
-end
