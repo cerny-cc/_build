@@ -19,9 +19,10 @@
 # We don't want to publish cookbooks from berks.
 if upload_cookbook_to_chef_server?
   changed_cookbooks.each do |cookbook|
-    file File.join(cookbook.path, 'Berksfile') do
+    file "#{cookbook.name}_Berksfile" do
       action :nothing
-      only_if { File.exist?(File.join(cookbook.path, 'Berksfile')) }
+      path ::File.join(cookbook.path, 'Berksfile')
+      only_if { ::File.exist?(::File.join(cookbook.path, 'Berksfile')) }
     end.run_action(:delete)
   end
 end
