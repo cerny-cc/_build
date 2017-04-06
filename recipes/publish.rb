@@ -18,6 +18,8 @@
 
 include_recipe 'delivery-truck::publish'
 
+cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbook-upload')
+
 if upload_cookbook_to_chef_server?
   changed_cookbooks.each do |cookbook|
     if File.exist?(File.join(cookbook.path, 'Berksfile'))
