@@ -16,8 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbook-upload')
-
 include_recipe 'delivery-truck::publish'
 
 if upload_cookbook_to_chef_server?
