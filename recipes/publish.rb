@@ -20,8 +20,8 @@
 if upload_cookbook_to_chef_server?
   changed_cookbooks.each do |cookbook|
     cb = DeliverySugar::Cookbook.new(cookbook.path)
-    p cd.load_metadata(cookbook.path)
-    
+    p cb.load_metadata(cookbook.path)
+
     file "#{cookbook.name}_Berksfile" do
       action :nothing
       path ::File.join(cookbook.path, 'Berksfile')
