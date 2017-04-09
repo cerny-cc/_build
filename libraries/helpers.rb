@@ -19,7 +19,7 @@
 def external?(cb)
   node.run_state['external_pipeline'] ||= []
   if node.run_state['external_pipeline'].empty?
-    delivery_api_get('delivery api get orgs')['orgs'].each do |org|
+    delivery_api_get('orgs')['orgs'].each do |org|
       delivery_api.get("orgs/#{org['name']}/projects").each do |project|
         node.run_state['external_pipeline'] << project['name']
       end
