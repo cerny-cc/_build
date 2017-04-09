@@ -32,14 +32,14 @@ include_recipe 'delivery-truck::default'
 
 return unless workflow_phase.eql?('syntax')
 
-chef_data_bag 'workflow'
-chef_data_bag_item "workflow/#{workflow_change_organization}"
-chef_data_bag_item 'workflow/external'
-
-external = data_bag_item('workflow', 'external')
-current = data_bag_item('workflow', workflow_change_organization)
-
 DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
+  chef_data_bag 'workflow'
+  chef_data_bag_item 'workflow/external'
+  chef_data_bag_item "workflow/#{workflow_change_organization}"
+
+  external = data_bag_item('workflow', 'external')
+  current = data_bag_item('workflow', workflow_change_organization)
+
   changed_cookbooks.each do |cookbook|
     cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path)
     cb.load!
@@ -47,7 +47,8 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     cb.metadata.dependencies.each do |k, _|
       deps[k] = {} unless current.keys.include?(k)
     end
-    chef_data_bag_item 'workflow/external' do
+    chef_data_bag_item 'external' do
+      data_bag 'workflow'
       raw_data deps.merge(external)
     end
   end
