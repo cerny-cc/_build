@@ -58,7 +58,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
       deps[k] = '0.0.0' if external?(k)
     end
   end
-  external = deps.merge(external)
+  external.raw_data = deps.merge(external)
   external.save
 end
 
