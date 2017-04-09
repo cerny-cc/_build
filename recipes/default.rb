@@ -17,7 +17,9 @@
 # limitations under the License.
 # F75ruqePSTN*MqQouNm^Y&mdHsLg2uS8$2SP&K9zNW&Mc*SZ!VN%S@K5HAnE4zT8JI%xsTO6b3cRYw*Zn!zdmSg&gS3n@9gH3
 
-chef_gem 'train'
+chef_gem 'train' do
+  compile_time false
+end
 
 yum_repository 'packages-microsoft-com-prod' do
   description 'Microsoft Prod'
@@ -32,36 +34,32 @@ include_recipe 'delivery-truck::default'
 
 return unless workflow_phase.eql?('syntax')
 
-deps = Mash.new
-deps['id'] = 'cookbooks'
-
-changed_cookbooks.each do |cookbook|
-  cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path)
-  cb.load!
-  cb.metadata.dependencies.each do |k, _|
-    deps[k] = {}
-    # node.default['delivery']['config']['dependencies'] << k unless node['delivery']['config']['dependencies'].include?(k)
-  end
-end
-
 DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
-  begin
-    data_bag('external')
-  rescue
-    db = Chef::DataBag.new
-    db.name('external')
-    db.create
-  end
+  db = 'external_pipeline'
+  dbi = 'cookbooks'
 
-  begin
-    dbi = data_bag_item('external', 'cookbooks')
-  rescue
-    dbi = Chef::DataBagItem.new
-    dbi.data_bag('external')
-  end
+  chef_data_bag(db) do
+    action :nothing
+  end.run_action(:create)
 
-  dbi.raw_data = deps.merge(dbi.raw_data)
-  dbi.save
+  chef_data_bag_item("#{db}/#{dbi}") do
+    action :nothing
+    complete false
+  end.run_action(:create)
+
+  external = data_bag_item(db, dbi)
+
+  deps = Mash.new
+  changed_cookbooks.each do |cookbook|
+    cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path)
+    cb.load!
+
+    cb.metadata.dependencies.each do |k, _|
+      deps[k] = '0.0.0' if external?(k)
+    end
+  end
+  external.raw_data = deps.merge(external)
+  external.save
 end
 
-puts node['delivery']['config']['dependencies']
+puts "Dependencies: #{node['delivery']['config']['dependencies']}"
