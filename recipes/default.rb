@@ -43,11 +43,16 @@ changed_cookbooks.each do |cookbook|
 end
 
 begin
-  dbi = data_bag_item('external', 'cookbooks')
+  data_bag('external')
 rescue
   db = Chef::DataBag.new
   db.name('external')
   db.create
+end
+
+begin
+  dbi = data_bag_item('external', 'cookbooks')
+rescue
   dbi = Chef::DataBagItem.new
   dbi.data_bag('external')
 end
