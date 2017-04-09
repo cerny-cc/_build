@@ -30,6 +30,17 @@ package 'powershell'
 
 include_recipe 'delivery-truck::default'
 
+deps = Mash.new
+deps['id'] = 'cookbooks'
+
+changed_cookbooks.each do |cookbook|
+  cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path).load!
+  cb.metadata.dependencies.each do |k, _|
+    deps[k] = {}
+  end
+  node.default['delivery']['config']['dependencies'] << k unless node['delivery']['config']['dependencies'].include?(k)
+end
+
 begin
   dbi = data_bag_item('external', 'cookbooks')
 rescue
@@ -38,18 +49,9 @@ rescue
   db.create
   dbi = Chef::DataBagItem.new
   dbi.data_bag('external')
-  dbi.raw_data = { id: 'cookbooks' }
 end
 
-changed_cookbooks.each do |cookbook|
-  cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path).load!
-  cb.metadata.dependencies.each do |k, _|
-    dbi[k] = {} unless dbi.keys.include?(k)
-  end
-  node.default['delivery']['config']['dependencies'] << k unless node['delivery']['config']['dependencies'].include?(k)
-end
-puts dbi.to_s
-puts dbi
+dbi.raw_data = deps.merge(dbi.raw_data)
 dbi.save
 
 puts node['delivery']['config']['dependencies']
