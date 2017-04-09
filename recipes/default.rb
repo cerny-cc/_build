@@ -17,7 +17,9 @@
 # limitations under the License.
 # F75ruqePSTN*MqQouNm^Y&mdHsLg2uS8$2SP&K9zNW&Mc*SZ!VN%S@K5HAnE4zT8JI%xsTO6b3cRYw*Zn!zdmSg&gS3n@9gH3
 
-chef_gem 'train'
+chef_gem 'train' do
+  compile_time false
+end
 
 yum_repository 'packages-microsoft-com-prod' do
   description 'Microsoft Prod'
@@ -35,8 +37,15 @@ return unless workflow_phase.eql?('syntax')
 DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
   db = 'external_pipeline'
   dbi = 'cookbooks'
-  chef_data_bag(db).run_action(:create)
-  chef_data_bag_item("#{db}/#{dbi}").run_action(:create)
+
+  chef_data_bag(db) do
+    action :nothing
+  end.run_action(:create)
+
+  chef_data_bag_item("#{db}/#{dbi}") do
+    action :nothing
+    complete false
+  end.run_action(:create)
 
   external = data_bag_item(db, dbi)
 
@@ -49,10 +58,8 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
       deps[k] = '0.0.0' if external?(k)
     end
   end
-  chef_data_bag_item dbi do
-    data_bag db
-    raw_json deps.merge(external)
-  end
+  external = deps.merge(external)
+  external.save
 end
 
 puts "Dependencies: #{node['delivery']['config']['dependencies']}"
