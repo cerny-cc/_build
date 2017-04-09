@@ -33,9 +33,9 @@ include_recipe 'delivery-truck::default'
 return unless workflow_phase.eql?('syntax')
 
 DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
-  chef_data_bag 'workflow'.run_action(:create)
-  chef_data_bag_item 'workflow/external'.run_action(:create)
-  chef_data_bag_item "workflow/#{workflow_change_organization}".run_action(:create)
+  chef_data_bag('workflow').run_action(:create)
+  chef_data_bag_item('workflow/external').run_action(:create)
+  chef_data_bag_item("workflow/#{workflow_change_organization}").run_action(:create)
 
   external = data_bag_item('workflow', 'external')
   current = data_bag_item('workflow', workflow_change_organization)
