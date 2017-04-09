@@ -33,10 +33,12 @@ include_recipe 'delivery-truck::default'
 return unless workflow_phase.eql?('syntax')
 
 DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
-  chef_data_bag('external_pipeline').run_action(:create)
-  chef_data_bag_item('external_pipeline/cookbooks').run_action(:create)
+  db = 'external_pipeline'
+  dbi = 'cookbooks'
+  chef_data_bag(db).run_action(:create)
+  chef_data_bag_item("#{db}/#{dbi}").run_action(:create)
 
-  external = data_bag_item('external_pipeline', 'cookbooks')
+  external = data_bag_item(db, dbi)
 
   deps = Mash.new
   changed_cookbooks.each do |cookbook|
@@ -47,8 +49,8 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
       deps[k] = '0.0.0' if external?(k)
     end
   end
-  chef_data_bag_item 'external' do
-    data_bag 'workflow'
+  chef_data_bag_item dbi do
+    data_bag db
     raw_json deps.merge(external)
   end
 end
