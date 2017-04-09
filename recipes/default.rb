@@ -30,6 +30,8 @@ package 'powershell'
 
 include_recipe 'delivery-truck::default'
 
+return unless workflow_phase.eql?('syntax')
+
 deps = Mash.new
 deps['id'] = 'cookbooks'
 
