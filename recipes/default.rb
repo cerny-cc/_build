@@ -29,3 +29,28 @@ end
 package 'powershell'
 
 include_recipe 'delivery-truck::default'
+
+begin
+  dbi = data_bag_item('external', 'cookbooks')
+rescue
+  db = Chef::DataBag.new
+  db.name('external')
+  db.create
+  cookbooks = {
+    id: 'cookbooks',
+  }
+  dbi = Chef::DataBagItem.new
+  dbi.data_bag('external')
+  dbi.raw_data = cookbooks
+  dbi.save
+end
+
+changed_cookbooks.each do |cookbook|
+  cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path).load!
+  cb.metadata.dependencies.each do |k, _|
+    dbi[k] = {} unless dbi.keys.include?(k)
+  end
+  node.default['delivery']['config']['dependencies'] << k unless node['delivery']['config']['dependencies'].include?(k)
+end
+
+puts node['delivery']['config']['dependencies']
