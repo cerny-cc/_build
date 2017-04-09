@@ -34,7 +34,8 @@ deps = Mash.new
 deps['id'] = 'cookbooks'
 
 changed_cookbooks.each do |cookbook|
-  cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path).load!
+  cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path)
+  cb.load!
   cb.metadata.dependencies.each do |k, _|
     deps[k] = {}
   end
