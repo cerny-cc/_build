@@ -38,8 +38,8 @@ changed_cookbooks.each do |cookbook|
   cb.load!
   cb.metadata.dependencies.each do |k, _|
     deps[k] = {}
+    node.default['delivery']['config']['dependencies'] << k unless node['delivery']['config']['dependencies'].include?(k)
   end
-  node.default['delivery']['config']['dependencies'] << k unless node['delivery']['config']['dependencies'].include?(k)
 end
 
 begin
