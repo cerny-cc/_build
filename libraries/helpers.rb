@@ -19,12 +19,30 @@
 def external?(cb)
   node.run_state['external_pipeline'] ||= []
   if node.run_state['external_pipeline'].empty?
-    orgs = JSON.parse(Mixlib::ShellOut.new('delivery api get orgs').run_command.stdout)
-    orgs['orgs'].each do |org|
-      JSON.parse(Mixlib::ShellOut.new("delivery api get orgs/#{org['name']}/projects/").run_command.stdout).each do |project|
+    delivery_api_get('delivery api get orgs')['orgs'].each do |org|
+      delivery_api.get("orgs/#{org['name']}/projects").each do |project|
         node.run_state['external_pipeline'] << project['name']
       end
     end
   end
   !node.run_state['external_pipeline'].include?(cb)
+end
+
+def delivery_api_get(path)
+  ent_name = node['delivery']['change']['enterprise']
+  request_url = "/api/v0/e/#{ent_name}/#{path}"
+  change = get_change_hash(node)
+  uri = URI.parse(change['delivery_api_url'])
+  http_client = Net::HTTP.new(uri.host, uri.port)
+
+  if uri.scheme == 'https'
+    http_client.use_ssl = true
+    http_client.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  end
+  headers = {
+    'chef-delivery-token' => change['token'],
+    'chef-delivery-user' => 'builder',
+  }
+  result = http_client.get(request_url, headers)
+  JSON.parse(result.body)
 end
