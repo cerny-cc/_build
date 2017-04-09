@@ -42,22 +42,24 @@ changed_cookbooks.each do |cookbook|
   end
 end
 
-begin
-  data_bag('external')
-rescue
-  db = Chef::DataBag.new
-  db.name('external')
-  db.create
-end
+DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
+  begin
+    data_bag('external')
+  rescue
+    db = Chef::DataBag.new
+    db.name('external')
+    db.create
+  end
 
-begin
-  dbi = data_bag_item('external', 'cookbooks')
-rescue
-  dbi = Chef::DataBagItem.new
-  dbi.data_bag('external')
-end
+  begin
+    dbi = data_bag_item('external', 'cookbooks')
+  rescue
+    dbi = Chef::DataBagItem.new
+    dbi.data_bag('external')
+  end
 
-dbi.raw_data = deps.merge(dbi.raw_data)
-dbi.save
+  dbi.raw_data = deps.merge(dbi.raw_data)
+  dbi.save
+end
 
 puts node['delivery']['config']['dependencies']
