@@ -17,15 +17,15 @@
 # limitations under the License.
 
 def external?(cb)
-  node.run_state['external_pipeline'] ||= []
-  if node.run_state['external_pipeline'].empty?
+  node.run_state['not_external_pipeline'] ||= []
+  if node.run_state['not_external_pipeline'].empty?
     delivery_api_get('orgs')['orgs'].each do |org|
       delivery_api_get("orgs/#{org['name']}/projects").each do |project|
-        node.run_state['external_pipeline'] << project['name']
-      end
+        node.run_state['not_external_pipeline'] << project['name']
+      end unless org['name'].eql?('external')
     end
   end
-  !node.run_state['external_pipeline'].include?(cb)
+  !node.run_state['not_external_pipeline'].include?(cb)
 end
 
 def delivery_api_get(path)
