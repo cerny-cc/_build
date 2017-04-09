@@ -49,7 +49,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     end
     chef_data_bag_item 'external' do
       data_bag 'workflow'
-      raw_json JSON.generate(deps.merge(external))
+      raw_json deps.merge(external)
     end
   end
 end
