@@ -36,10 +36,12 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
   changed_cookbooks.each do |cookbook|
     cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path)
     cb.load!
+    deps = Mash.new
+    cb.metadata.dependencies.each do |k, _|
+      deps[k] = {}
+    end
     chef_data_bag_item 'workflow/external' do
-      cb.metadata.dependencies.each do |k, _|
-        value k { |v| v || {} }
-      end
+      raw_data deps
     end
   end
 end
