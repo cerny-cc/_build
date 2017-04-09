@@ -36,12 +36,9 @@ rescue
   db = Chef::DataBag.new
   db.name('external')
   db.create
-  cookbooks = {
-    id: 'cookbooks',
-  }
   dbi = Chef::DataBagItem.new
   dbi.data_bag('external')
-  dbi.raw_data = cookbooks
+  dbi.id('cookbooks')
   dbi.save
 end
 
@@ -52,5 +49,6 @@ changed_cookbooks.each do |cookbook|
   end
   node.default['delivery']['config']['dependencies'] << k unless node['delivery']['config']['dependencies'].include?(k)
 end
+dbi.save
 
 puts node['delivery']['config']['dependencies']
