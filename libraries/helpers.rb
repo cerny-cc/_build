@@ -31,7 +31,7 @@ end
 def delivery_api_get(path)
   ent_name = node['delivery']['change']['enterprise']
   request_url = "/api/v0/e/#{ent_name}/#{path}"
-  change = get_change_hash(node)
+  change = ::JSON.parse(::File.read(::File.expand_path('../../../../../../../change.json', node['delivery_builder']['workspace'])))
   uri = URI.parse(change['delivery_api_url'])
   http_client = Net::HTTP.new(uri.host, uri.port)
 
