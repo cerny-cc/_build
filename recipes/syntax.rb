@@ -31,17 +31,16 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
 
   external = data_bag_item(db, dbi)
 
-  deps = {}
+  deps = Mash.new
   deps[:supermarket] = []
-  deps[:git] = {}
-  deps[:github] = {}
+  deps[:git] = Mash.new
 
   changed_cookbooks.each do |cookbook|
     cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path)
     cb.load!
 
-    berks = {}
     if ::File.exist?("#{cookbook.path}/Berksfile")
+      berks ||= {}
       ::File.read("#{cookbook.path}/Berksfile").each_line do |line|
         next unless line =~ /^\s*cookbook/
         h = line.split(',').map { |a| a.strip.delete('"').split }.to_h
