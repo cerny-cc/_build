@@ -63,16 +63,21 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     Chef::Log.error(berks)
 
     cb.metadata.dependencies.each do |k, _|
-      Chef::Log.error("Proccessing Cookbook #{k}")
+      Chef::Log.error("#{k} :: Dependency detected")
       if berks.include?(k)
+        Chef::Log.error("#{k} :: Berks Dependency")
         deps[berks[k][:source]] ||= {}
         deps[berks[k][:source]][k] ||= {}
         deps[berks[k][:source]][k] = berks[k]
       else
+        Chef::Log.error("#{k} :: Supermarket Dependency")
         deps[:supermarket] << k
       end
     end
   end
+  Chef::Log.error('Prior to merge')
+  Chef::Log.error(deps)
+  Chef::Log.error(external)
   external.raw_data = deps.merge(external)
   external.save
 end
