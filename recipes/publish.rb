@@ -43,7 +43,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     berks = {}
     if ::File.exist?("#{cookbook.path}/Berksfile")
       ::File.read("#{cookbook.path}/Berksfile").each_line do |line|
-        next unless line ~= /^\s*cookbook/
+        next unless line =~ /^\s*cookbook/
         h = line.split(',').map { |a| a.strip.delete('"').split }.to_h
         if h.include?('git:')
           h[:source] = :git
