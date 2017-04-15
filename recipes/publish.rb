@@ -67,7 +67,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
         deps[berks[k][:source]][k] ||= {}
         deps[berks[k][:source]][k] = berks[k]
       else
-        deps['supermarket'] << k
+        deps[:supermarket] << k
       end
     end
   end
