@@ -19,8 +19,8 @@
 def external?(cb)
   node.run_state['not_external_pipeline'] ||= []
   if node.run_state['not_external_pipeline'].empty?
-    delivery_api_get('orgs')['orgs'].each do |org|
-      delivery_api_get("orgs/#{org['name']}/projects").each do |project|
+    delivery_api(:get, 'orgs')['orgs'].each do |org|
+      delivery_api(:get, "orgs/#{org['name']}/projects").each do |project|
         node.run_state['not_external_pipeline'] << project['name']
       end unless org['name'].eql?('external')
     end
@@ -28,7 +28,7 @@ def external?(cb)
   !node.run_state['not_external_pipeline'].include?(cb)
 end
 
-def delivery_api_get(path)
+def delivery_api(method = :get, path = '/_status', data = '')
   ent_name = node['delivery']['change']['enterprise']
   request_url = "/api/v0/e/#{ent_name}/#{path}"
   change = ::JSON.parse(::File.read(::File.expand_path('../../../../../../../change.json', node['delivery_builder']['workspace'])))
@@ -43,6 +43,11 @@ def delivery_api_get(path)
     'chef-delivery-token' => change['token'],
     'chef-delivery-user' => 'builder',
   }
-  result = http_client.get(request_url, headers)
-  JSON.parse(result.body)
+  if method.eql?(:post)
+    (http_client.send method, request_url, data, headers).body
+  elsif method.eql?(:get)
+    JSON.parse((http_client.send method, request_url, headers).body.delete("\n"))
+  else
+    (http_client.send method, request_url, headers).body
+  end
 end

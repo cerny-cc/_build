@@ -16,6 +16,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
+  db = 'external_pipeline'
+  dbi = 'cookbooks'
+
+  chef_data_bag(db) do
+    action :nothing
+  end.run_action(:create)
+
+  chef_data_bag_item("#{db}/#{dbi}") do
+    action :nothing
+    complete false
+  end.run_action(:create)
+
+  external = data_bag_item(db, dbi)
+
+  deps = {}
+  deps[:supermarket] = []
+  deps[:git] = {}
+  deps[:github] = {}
+
+  changed_cookbooks.each do |cookbook|
+    cb = Chef::Cookbook::CookbookVersionLoader.new(cookbook.path)
+    cb.load!
+
+    berks = {}
+    if ::File.exist?("#{cookbook.path}/Berksfile")
+      ::File.read("#{cookbook.path}/Berksfile").each_line do |line|
+        next unless line =~ /^\s*cookbook/
+        h = line.split(',').map { |a| a.strip.delete('"').split }.to_h
+        if h.include?('git:')
+          h[:source] = :git
+          h[:uri] = h['git:']
+          h.delete('git:')
+        elsif h.include?('github:')
+          h[:source] = :git
+          h[:uri] = "https://github.com/#{h['github:']}.git"
+          h.delete('github:')
+        else
+          h[:source] = :other
+        end
+        berks[h['cookbook']] ||= {}
+        berks[h['cookbook']] = h
+      end
+    end
+
+    cb.metadata.dependencies.each do |k, _|
+      if berks.include?(k)
+        deps[berks[k][:source]] ||= {}
+        deps[berks[k][:source]][k] ||= {}
+        deps[berks[k][:source]][k] = berks[k]
+      else
+        deps['supermarket'] << k
+      end
+    end
+  end
+  external.raw_data = deps.merge(external)
+  external.save
+end
+
 # We don't want to publish cookbooks from berks.
 if upload_cookbook_to_chef_server?
   changed_cookbooks.each do |cookbook|
