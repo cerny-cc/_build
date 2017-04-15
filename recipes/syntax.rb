@@ -78,7 +78,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
   Chef::Log.error('Prior to merge')
   Chef::Log.error(deps)
   Chef::Log.error(external)
-  external.raw_data = Chef::Mixin::DeepMerge.deep_merge!(deps, external)
+  external.raw_data = Chef::Mixin::DeepMerge.deep_merge!(external, deps)
   Chef::Log.error('After merge')
   Chef::Log.error(external)
 
