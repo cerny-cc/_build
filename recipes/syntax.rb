@@ -79,6 +79,9 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
   Chef::Log.error(deps)
   Chef::Log.error(external)
   external.raw_data = deps.merge(external)
+  Chef::Log.error('After merge')
+  Chef::Log.error(external)
+
   external.save
 end
 
