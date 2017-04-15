@@ -60,7 +60,10 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
       end
     end
 
+    Chef::Log.error(berks)
+
     cb.metadata.dependencies.each do |k, _|
+      Chef::Log.error("Proccessing Cookbook #{k}")
       if berks.include?(k)
         deps[berks[k][:source]] ||= {}
         deps[berks[k][:source]][k] ||= {}
