@@ -17,19 +17,28 @@
 # limitations under the License.
 
 DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
-  db = 'external_pipeline'
-  dbi = 'cookbooks'
+  # db = 'external_pipeline'
+  # dbi = 'cookbooks'
 
-  chef_data_bag(db) do
-    action :nothing
-  end.run_action(:create)
+  # chef_data_bag(db) do
+  #   action :nothing
+  # end.run_action(:create)
+  #
+  # chef_data_bag_item("#{db}/#{dbi}") do
+  #   action :nothing
+  #   complete false
+  # end.run_action(:create)
+  #
+  # external = data_bag_item(db, dbi)
 
-  chef_data_bag_item("#{db}/#{dbi}") do
-    action :nothing
-    complete false
-  end.run_action(:create)
+  cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbooks')
 
-  external = data_bag_item(db, dbi)
+  execute '_pipeline :: Clone project from Chef Automate Workflow' do
+    command 'delivery clone _pipeline --no-spinner'
+    cwd cookbook_directory
+  end
+
+  external = JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json"))
 
   deps = Mash.new
   deps[:supermarket] = []
@@ -60,29 +69,35 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
       end
     end
 
-    Chef::Log.error(berks)
-
     cb.metadata.dependencies.each do |k, _|
-      Chef::Log.error("#{k} :: Dependency detected")
       if berks.include?(k)
-        Chef::Log.error("#{k} :: Berks Dependency")
         deps[berks[k][:source]] ||= {}
         deps[berks[k][:source]][k] ||= {}
         deps[berks[k][:source]][k] = berks[k]
       else
-        Chef::Log.error("#{k} :: Supermarket Dependency")
         deps[:supermarket] << k
       end
     end
   end
-  Chef::Log.error('Prior to merge')
-  Chef::Log.error(deps)
-  Chef::Log.error(external)
-  external.raw_data = Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)
-  Chef::Log.error('After merge')
-  Chef::Log.error(external)
+  # external.raw_data = Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)
+  # external.save
+  file "#{cookbook_directory}/_pipeline/external_cookbooks.json" do
+    content lazy { JSON.generate(Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)) }
+  end
 
-  external.save
+  execute '_pipeline :: Commit Changes' do
+    command "git commit -m update-dependencies-for-#{cookbook_name}"
+    cwd "#{cookbook_directory}/_pipeline"
+    # Adding as part of the guard feels dirty, but it makes the recipe more convergent -- we don't have a resource that always runs, or build logic off of unknown wording in future versions of git.
+    not_if 'git add . && git update-index -q --ignore-submodules --refresh && git diff-index --quiet delivery/master --'
+    notifies :run, 'execute[_pipeline :: Submit change to Chef Automate Workflow]', :immediately
+  end
+
+  execute '_pipeline :: Submit change to Chef Automate Workflow' do
+    command 'delivery review --no-spinner --no-open'
+    cwd "#{cookbook_directory}/_pipeline"
+    action :nothing
+  end
 end
 
 include_recipe 'delivery-truck::syntax'

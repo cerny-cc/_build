@@ -4,7 +4,7 @@ maintainer_email 'ncerny@gmail.com'
 license 'apachev2'
 description 'Installs/Configures _build'
 long_description 'Installs/Configures _build'
-version '0.5.21'
+version '0.6.0'
 
 # The `issues_url` points to the location where issues for this cookbook are
 # tracked.  A `View Issues` link will be displayed on this cookbook's page when
