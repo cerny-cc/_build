@@ -12,6 +12,7 @@
       "enable_cookstyle": true
     },
     "publish": {
+      "github": "cerny-cc/_build",
       "chef_server": true
     }
   },
