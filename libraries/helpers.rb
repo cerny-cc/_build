@@ -56,8 +56,10 @@ def external_cookbooks_json(deps)
   cookbook_directory = ::File.join(node['delivery']['workspace']['cache'], 'cookbooks')
   src = JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json"))
   hash = Chef::Mixin::DeepMerge.deep_merge(src, deps)
-  hash.each do |_, v|
-    v.sort
+  hash = hash.sort.to_h
+  hash.each do |k, v|
+    v.sort! if v.is_a?(Array)
+    hash[k] = v.sort.to_h if v.is_a?(Hash)
   end
   JSON.pretty_generate(hash)
 end
