@@ -52,7 +52,7 @@ def delivery_api(method = :get, path = '/_status', data = '')
   end
 end
 
-def external_cookbooks_json
+def external_cookbooks_json(deps)
   hash = Chef::Mixin::DeepMerge.deep_merge(JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json")), deps)
   hash.each do |_, v|
     v.sort

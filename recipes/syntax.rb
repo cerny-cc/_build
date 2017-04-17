@@ -25,7 +25,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     not_if 'git config --get user.name | grep "cerny-cc automated build"'
   end
 
-  cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbooks')
+  cookbook_directory = ::File.join(node['delivery']['workspace']['cache'], 'cookbooks')
 
   directory "#{cookbook_directory}/.delivery" do
     recursive true
@@ -103,10 +103,9 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
       end
     end
   end
-  # external.raw_data = Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)
-  # external.save
+
   file "#{cookbook_directory}/_pipeline/external_cookbooks.json" do
-    content lazy { external_cookbooks_json }
+    content lazy { external_cookbooks_json(deps) }
     notifies :run, 'execute[_pipeline :: Commit Changes]', :immediately
   end
 
