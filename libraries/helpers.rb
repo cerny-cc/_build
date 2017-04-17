@@ -51,3 +51,13 @@ def delivery_api(method = :get, path = '/_status', data = '')
     (http_client.send method, request_url, headers).body
   end
 end
+
+def external_cookbooks_json(deps)
+  cookbook_directory = ::File.join(node['delivery']['workspace']['cache'], 'cookbooks')
+  src = JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json"))
+  hash = Chef::Mixin::DeepMerge.deep_merge(src, deps)
+  hash.each do |_, v|
+    v.sort
+  end
+  JSON.pretty_generate(hash)
+end

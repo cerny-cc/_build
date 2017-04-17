@@ -25,7 +25,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     not_if 'git config --get user.name | grep "cerny-cc automated build"'
   end
 
-  cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbooks')
+  cookbook_directory = ::File.join(node['delivery']['workspace']['cache'], 'cookbooks')
 
   directory "#{cookbook_directory}/.delivery" do
     recursive true
@@ -60,7 +60,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
   end
 
   execute '_pipeline :: Check Out working branch' do
-    command "git checkout -b update-dependencies-for-#{cookbook_name}"
+    command "git checkout -b update-dependencies-for-#{workflow_change_project}"
     cwd "#{cookbook_directory}/_pipeline"
   end
 
@@ -103,15 +103,14 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
       end
     end
   end
-  # external.raw_data = Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)
-  # external.save
+
   file "#{cookbook_directory}/_pipeline/external_cookbooks.json" do
-    content lazy { JSON.generate(Chef::Mixin::DeepMerge.deep_merge(JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json")), deps)) }
+    content lazy { external_cookbooks_json(deps) }
     notifies :run, 'execute[_pipeline :: Commit Changes]', :immediately
   end
 
   execute '_pipeline :: Commit Changes' do
-    command "git commit -m update-dependencies-for-#{cookbook_name}"
+    command "git commit -m update-dependencies-for-#{workflow_change_project}"
     cwd "#{cookbook_directory}/_pipeline"
     # Adding as part of the guard feels dirty, but it makes the recipe more convergent -- we don't have a resource that always runs, or build logic off of unknown wording in future versions of git.
     not_if 'git add . && git update-index -q --ignore-submodules --refresh && git diff-index --quiet delivery/master --'
