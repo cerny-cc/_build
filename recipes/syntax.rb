@@ -96,7 +96,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
   # external.raw_data = Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)
   # external.save
   file "#{cookbook_directory}/_pipeline/external_cookbooks.json" do
-    content lazy { JSON.generate(Chef::Mixin::DeepMerge.deep_merge(JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json"), deps))) }
+    content lazy { JSON.generate(Chef::Mixin::DeepMerge.deep_merge(JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json")), deps)) }
     notifies :run, 'execute[_pipeline :: Commit Changes]', :immediately
   end
 
