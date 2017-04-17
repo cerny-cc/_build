@@ -17,19 +17,52 @@
 # limitations under the License.
 
 DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
-  db = 'external_pipeline'
-  dbi = 'cookbooks'
+  execute 'git config --global user.email "builder@cerny.cc"' do
+    not_if 'git config --get user.email | grep builder@cerny.cc'
+  end
 
-  chef_data_bag(db) do
-    action :nothing
-  end.run_action(:create)
+  execute 'git config --global user.name "cerny-cc automated build"' do
+    not_if 'git config --get user.name | grep "cerny-cc automated build"'
+  end
 
-  chef_data_bag_item("#{db}/#{dbi}") do
-    action :nothing
-    complete false
-  end.run_action(:create)
+  cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbooks')
 
-  external = data_bag_item(db, dbi)
+  directory "#{cookbook_directory}/.delivery" do
+    recursive true
+  end
+
+  file "#{cookbook_directory}/.delivery/cli.toml" do
+    content <<-EOF
+      api_protocol = "https"
+      enterprise = "cerny"
+      git_port = "8989"
+      organization = "cerny-cc"
+      pipeline = "master"
+      server = "automate.cerny.cc"
+      user = "builder"
+    EOF
+  end
+
+  directory "#{cookbook_directory}/_pipeline" do
+    action :delete
+    recursive true
+  end
+
+  change = ::JSON.parse(::File.read(::File.expand_path('../../../../../../../change.json', node['delivery_builder']['workspace'])))
+  directory "#{ENV['HOME']}/.delivery"
+  file "#{ENV['HOME']}/.delivery/api-tokens" do
+    content "automate.cerny.cc,cerny,builder|#{change['token']}"
+  end
+
+  execute '_pipeline :: Clone project from Chef Automate Workflow' do
+    command 'delivery clone _pipeline --no-spinner'
+    cwd cookbook_directory
+  end
+
+  execute '_pipeline :: Check Out working branch' do
+    command "git checkout -b update-dependencies-for-#{cookbook_name}"
+    cwd "#{cookbook_directory}/_pipeline"
+  end
 
   deps = Mash.new
   deps[:supermarket] = []
@@ -60,29 +93,37 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
       end
     end
 
-    Chef::Log.error(berks)
-
     cb.metadata.dependencies.each do |k, _|
-      Chef::Log.error("#{k} :: Dependency detected")
       if berks.include?(k)
-        Chef::Log.error("#{k} :: Berks Dependency")
         deps[berks[k][:source]] ||= {}
         deps[berks[k][:source]][k] ||= {}
         deps[berks[k][:source]][k] = berks[k]
       else
-        Chef::Log.error("#{k} :: Supermarket Dependency")
         deps[:supermarket] << k
       end
     end
   end
-  Chef::Log.error('Prior to merge')
-  Chef::Log.error(deps)
-  Chef::Log.error(external)
-  external.raw_data = Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)
-  Chef::Log.error('After merge')
-  Chef::Log.error(external)
+  # external.raw_data = Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)
+  # external.save
+  file "#{cookbook_directory}/_pipeline/external_cookbooks.json" do
+    content lazy { JSON.generate(Chef::Mixin::DeepMerge.deep_merge(JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json")), deps)) }
+    notifies :run, 'execute[_pipeline :: Commit Changes]', :immediately
+  end
 
-  external.save
+  execute '_pipeline :: Commit Changes' do
+    command "git commit -m update-dependencies-for-#{cookbook_name}"
+    cwd "#{cookbook_directory}/_pipeline"
+    # Adding as part of the guard feels dirty, but it makes the recipe more convergent -- we don't have a resource that always runs, or build logic off of unknown wording in future versions of git.
+    not_if 'git add . && git update-index -q --ignore-submodules --refresh && git diff-index --quiet delivery/master --'
+    notifies :run, 'execute[_pipeline :: Submit change to Chef Automate Workflow]', :immediately
+    action :nothing
+  end
+
+  execute '_pipeline :: Submit change to Chef Automate Workflow' do
+    command 'delivery review --no-spinner --no-open'
+    cwd "#{cookbook_directory}/_pipeline"
+    action :nothing
+  end
 end
 
 include_recipe 'delivery-truck::syntax'
