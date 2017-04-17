@@ -25,6 +25,8 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     not_if 'git config --get user.name | grep "cerny-cc automated build"'
   end
 
+  cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbooks')
+
   directory "#{cookbook_directory}/.delivery" do
     recursive true
   end
@@ -46,8 +48,6 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
   file "#{ENV['HOME']}/.delivery/api-tokens" do
     content "automate.cerny.cc,cerny,builder|#{change['token']}"
   end
-
-  cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbooks')
 
   execute '_pipeline :: Clone project from Chef Automate Workflow' do
     command 'delivery clone _pipeline --no-spinner'
