@@ -54,6 +54,11 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     cwd cookbook_directory
   end
 
+  execute '_pipeline :: Check Out working branch' do
+    command "git checkout -b update-dependencies-for-#{cookbook_name}"
+    cwd "#{cookbook_directory}/_pipeline"
+  end
+
   deps = Mash.new
   deps[:supermarket] = []
   deps[:git] = Mash.new
