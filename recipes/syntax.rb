@@ -17,19 +17,19 @@
 # limitations under the License.
 
 DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
-  # db = 'external_pipeline'
-  # dbi = 'cookbooks'
+  execute 'git config --global user.email "builder@cerny.cc"' do
+    not_if 'git config --get user.email | grep builder@cerny.cc'
+  end
 
-  # chef_data_bag(db) do
-  #   action :nothing
-  # end.run_action(:create)
-  #
-  # chef_data_bag_item("#{db}/#{dbi}") do
-  #   action :nothing
-  #   complete false
-  # end.run_action(:create)
-  #
-  # external = data_bag_item(db, dbi)
+  execute 'git config --global user.name "cerny-cc automated build"' do
+    not_if 'git config --get user.name | grep "cerny-cc automated build"'
+  end
+
+  change = ::JSON.parse(::File.read(::File.expand_path('../../../../../../../change.json', node['delivery_builder']['workspace'])))
+  directory "#{ENV['HOME']}/.delivery"
+  file "#{ENV['HOME']}/.delivery/api-tokens" do
+    content "automate.cerny.cc,cerny,builder|#{change['token']}"
+  end
 
   cookbook_directory = File.join(node['delivery']['workspace']['cache'], 'cookbooks')
 
