@@ -38,8 +38,6 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     cwd cookbook_directory
   end
 
-  external = JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json"))
-
   deps = Mash.new
   deps[:supermarket] = []
   deps[:git] = Mash.new
@@ -82,7 +80,8 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
   # external.raw_data = Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)
   # external.save
   file "#{cookbook_directory}/_pipeline/external_cookbooks.json" do
-    content lazy { JSON.generate(Chef::Mixin::DeepMerge.deep_merge(external.to_h, deps)) }
+    content lazy { JSON.generate(Chef::Mixin::DeepMerge.deep_merge(JSON.parse(::File.read("#{cookbook_directory}/_pipeline/external_cookbooks.json"), deps))) }
+    notifies :run, 'execute[_pipeline :: Commit Changes]', :immediately
   end
 
   execute '_pipeline :: Commit Changes' do
@@ -91,6 +90,7 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     # Adding as part of the guard feels dirty, but it makes the recipe more convergent -- we don't have a resource that always runs, or build logic off of unknown wording in future versions of git.
     not_if 'git add . && git update-index -q --ignore-submodules --refresh && git diff-index --quiet delivery/master --'
     notifies :run, 'execute[_pipeline :: Submit change to Chef Automate Workflow]', :immediately
+    action :nothing
   end
 
   execute '_pipeline :: Submit change to Chef Automate Workflow' do
