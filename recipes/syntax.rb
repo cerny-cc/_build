@@ -43,6 +43,11 @@ DeliverySugar::ChefServer.new(delivery_knife_rb).with_server_config do
     EOF
   end
 
+  directory "#{cookbook_directory}/_pipeline" do
+    action :delete
+    recursive true
+  end
+
   change = ::JSON.parse(::File.read(::File.expand_path('../../../../../../../change.json', node['delivery_builder']['workspace'])))
   directory "#{ENV['HOME']}/.delivery"
   file "#{ENV['HOME']}/.delivery/api-tokens" do
