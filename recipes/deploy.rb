@@ -16,4 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+node.default['delivery']['config']['delivery-truck']['deploy']['search'] = 'tags:canary'
+
 include_recipe 'delivery-truck::deploy'
